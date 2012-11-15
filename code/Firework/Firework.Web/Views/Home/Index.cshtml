@@ -1,0 +1,275 @@
+﻿<!DOCTYPE HTML>
+<header>
+    <style>
+        #playGround {
+            width: 600px;
+            height: 300px;
+            background-color: black;
+        }
+    </style>
+</header>
+<canvas id="playGround"></canvas>
+<img src="~/nightcity.png" id="nightcity" style="display:none"/>
+<div id="numFirework"></div>
+<select id="fireworkType">
+    <option value="1">Simple</option>
+    <option value="2">Complex</option>
+</select>
+<select id="fireworkColor">
+    <option value="255,0,0">red</option>
+    <option value="0,255,0">green</option>
+    <option value="0,0,255">blue</option>
+    <option value="255,255,0">yellow</option>
+    <option value="0,255,255">cyan</option>
+    <option value="255,255,255">white</option>
+    <option value="multi">multi-color</option>
+</select>
+<select id="fireworkTail">
+    <option value="0">Circle tail</option>
+    <option value="1">Line tail</option>
+    <option value="2">No tail</option>
+</select>
+<div id="connectionStatus"></div>
+<script src="~/Scripts/jquery-1.8.2.min.js"></script>
+<script type="text/javascript">
+    
+    //You can load page with type and color parameters
+    var preType = @ViewBag.FireworkType;
+    var preColor = @ViewBag.FireworkColorIndex;
+    
+    if (preType != undefined)
+        fireworkType.selectedIndex = preType;
+    if (preColor != undefined)
+        fireworkColor.selectedIndex = preColor;
+
+    //SparkTrail class defines a trailing point of a spark
+    function SparkTrail(x, y) {
+        this.X = x;
+        this.Y = y;
+    }
+
+    //Spark class represents one spark in a firework
+    function Spark(type, color, x, y, fade) {
+        this.Color = color;
+        this.Type = type; //not used. For future extensions such as different spark shapes.
+        this.X = x;
+        this.Y = y;
+        this.Fade = fade; //not used. For future extensions such as simulating spark burning out.
+        this.Trail = [];  //trail of the spark
+    }
+
+    //Firework class is the base class of all types of fireworks
+    function Firework(baseX, baseY, color, tail) {
+        this.BaseX = baseX;
+        this.BaseY = baseY;
+        this.Color = color;
+        this.MaxPhase = 0;
+        this.Phase = 0; 
+        this.Sparks = [];
+        this.TailType = tail;
+    }
+    Firework.prototype.UpdatePhase = function (phase) {
+        this.Phase = phase;
+        if (this.Sparks.length > 0) {
+            this.Sparks.map(function (spark) {
+                if (spark.Trail.length >= 5)
+                    spark.Trail.shift(); //maximum trail length is 5
+                spark.Trail.push(new SparkTrail(spark.X, spark.Y)); //automatically maintain trails
+            });
+        }
+        this.updateSparks();
+    }
+    Firework.prototype.updateSparks = function () { }; //virtual method to be overriden by subclasses
+
+    //FireworkPattern class holds pre-calculated points of expanding circles
+    function FireworkPattern() {
+        this.Points = [[]];
+    }
+
+    //FireworkPatternFactory class provides pre-calculated points for explosion and gravity
+    function FireworkPatternFactory() {
+        this.Classic = new FireworkPattern();
+        this.GravityOffsets = [];
+        var convert= Math.PI/ 180;
+        //expanding circle
+        for (var i = 0; i < 100; i++) {
+            var points = [];
+            for (var j = 0; j < 360; j += 5) {
+                var x = i * Math.cos(j * convert);
+                var y = i * Math.sin(j * convert);
+                points.push(new SparkTrail(x, y));
+            }
+            this.Classic.Points.push(points);
+        }
+        //gravity
+        for (var i = 0; i < 100; i++){
+            if ( i >=40)
+                this.GravityOffsets.push(0.049 * (i-40) * (i-40));
+            else
+                this.GravityOffsets.push(0);
+        }
+    }
+
+    //SimpleFirework class represents a simple firework with one ring of sparks
+    function SimpleFirework(baseX, baseY) {
+        this.step = 10;
+        Firework.apply(this, arguments);
+        for (var i = 0; i < 72 / this.step - 1 ; i++)
+        {
+            if (this.Color =="multi") //multi-color support
+                this.Sparks.push(new Spark(1, fireworkColor.options[Math.floor(Math.random()*6)].value, 0, 255));
+            else
+                this.Sparks.push(new Spark(1, this.Color, 0, 255));
+        }
+        this.MaxPhase = 72;
+    }
+    SimpleFirework.prototype = new Firework();
+    SimpleFirework.prototype.constructor = SimpleFirework;
+    SimpleFirework.prototype.updateSparks = function () {
+        for (var i = 0; i < this.Sparks.length; i++) {
+            this.Sparks[i].X = factory.Classic.Points[this.Phase][i * this.step].X;
+            this.Sparks[i].Y = factory.Classic.Points[this.Phase][i * this.step].Y;
+        }
+    }
+
+    //ComplexFirework class represents a complex firework with 4 rings of sparks
+    function ComplexFirework(baseX, baseY) {
+        this.step = 6;
+        Firework.apply(this, arguments);
+        for (var j = 0; j <4; j++)
+        {
+            for (var i = 0; i < 72 / this.step ; i++)
+            {
+                if (this.Color =="multi") //multi-color support
+                    this.Sparks.push(new Spark(1, fireworkColor.options[Math.floor(Math.random()*6)].value, 0, 255));
+                else 
+                    this.Sparks.push(new Spark(1, this.Color, 0, 255));
+            }
+        }
+        this.MaxPhase = 72;
+    }
+    ComplexFirework.prototype = new Firework();
+    ComplexFirework.prototype.constructor = ComplexFirework;
+    ComplexFirework.prototype.updateSparks = function () {
+        var seg = 72 / this.step;
+        for (var j = 0; j < 4; j++){
+            for (var i = 0; i < seg; i++) {
+                if (this.Phase + j * 10 < 100){
+                    this.Sparks[i + seg * j].X = factory.Classic.Points[this.Phase+j * 10][(i * this.step + (4-j) * 15) % 72].X;
+                    this.Sparks[i + seg * j].Y = factory.Classic.Points[this.Phase+j * 10][(i * this.step + (4-j) * 15) % 72].Y;
+                }
+            }
+        }
+    }
+
+    var canvas;   //HTML 5 canvas
+    var context;  //canvas drawing context
+    var factory;  //factory for pre-calculated points
+    var fireworks = []; //Array that holds currently active fireworks
+    var rect;     //canvas rectangle
+    var hub;      //SignalR hub client
+    var enableUI = true; //UI is enabled or not (whether user can click on canvas)
+
+    $(document).ready(function () {
+        canvas = document.getElementById("playGround");
+        canvas.width = 600; 
+        canvas.height = 300;
+        context = canvas.getContext("2d");
+        rect = canvas.getBoundingClientRect();
+        factory = new FireworkPatternFactory();
+
+        $(canvas).click(function (evt) {
+            //User clicks on canvas - request user to broadcast the event
+            if (!enableUI)
+                return;
+            var firework;
+            if (fireworkType.value == 1)
+                firework = new SimpleFirework(evt.clientX - rect.left - document.documentElement.scrollLeft,
+                                                 evt.clientY - rect.top - document.documentElement.scrollTop, fireworkColor.value, fireworkTail.value);
+            else
+                firework = new ComplexFirework(evt.clientX - rect.left - document.documentElement.scrollLeft,
+                                              evt.clientY - rect.top - document.documentElement.scrollTop, fireworkColor.value, fireworkTail.value);
+            fireworks.push(firework);
+        });
+       
+        setTimeout(updateCanvas, 50); //Start rendering routine.
+    });
+    function connectionStateChanged(state) {
+        //Display SignalR connection status
+        var stateConversion = {0: 'connecting', 1: 'connected', 2: 'reconnecting', 4: 'disconnected'};
+        $('#connectionStatus').text(stateConversion[state.newState]);
+    }
+    function updateCanvas() {
+        //render routine
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(nightcity,0,0);
+        fireworks.map(function (firework) {
+            //remove burned-out sparks
+            if (firework.Phase >= firework.MaxPhase) {
+                var position = $.inArray(firework, fireworks);
+                if (~position)
+                    fireworks.splice(position, 1);
+            }
+        });
+        fireworks.map(function (firework) {
+            if (firework.Phase < firework.MaxPhase) {
+                if (firework.Phase <= 30)
+                    firework.UpdatePhase(firework.Phase + 8); //exploding
+                else
+                    firework.UpdatePhase(firework.Phase + 5); //drifting
+                
+                firework.Sparks.map(function (spark) {
+                    spark.Y = spark.Y + factory.GravityOffsets[firework.Phase];
+                    context.beginPath();
+                    context.arc(firework.BaseX + spark.X, firework.BaseY + spark.Y, 8, 0, 2 * Math.PI, false);
+                    context.fillStyle = "rgba(" + spark.Color + ",0.5)";
+                    context.fill();
+
+                    if (firework.TailType != 2)
+                    {
+                        for (var i = 0; i < spark.Trail.length; i++)
+                        {
+                            if (firework.TailType == 0)
+                            {
+                                context.beginPath();
+                                context.arc(firework.BaseX + spark.Trail[i].X, firework.BaseY + spark.Trail[i].Y, i*1.5, 0, 2 * Math.PI, false);
+                                context.fillStyle = "rgba(" + spark.Color + ",0.5)";
+                                context.fill();
+                            }
+                            else{
+                                if (firework.Phase > 40)
+                                {
+                                    if (i < spark.Trail.length-1){
+                                        context.beginPath();
+                                        context.moveTo(firework.BaseX + spark.Trail[i].X - i * 1.5, firework.BaseY + spark.Trail[i].Y);
+                                        context.lineTo(firework.BaseX + spark.Trail[i+1].X - (i+1) * 1.5, firework.BaseY + spark.Trail[i+1].Y);
+                                        context.lineTo(firework.BaseX + spark.Trail[i+1].X + (i+1) * 1.5, firework.BaseY + spark.Trail[i+1].Y);
+                                        context.lineTo(firework.BaseX + spark.Trail[i].X + i * 1.5, firework.BaseY + spark.Trail[i].Y);
+                                        context.closePath();
+                                        context.fill();
+                                    }
+                                    else
+                                    {
+                                        context.beginPath();
+                                        context.moveTo(firework.BaseX + spark.Trail[i].X - i * 1.5, firework.BaseY + spark.Trail[i].Y);
+                                        context.lineTo(firework.BaseX + spark.X - (i+1) * 1.5, firework.BaseY + spark.Y);
+                                        context.lineTo(firework.BaseX + spark.X + (i+1) * 1.5, firework.BaseY + spark.Y);
+                                        context.lineTo(firework.BaseX + spark.Trail[i].X + i * 1.5, firework.BaseY + spark.Trail[i].Y);
+                                        context.closePath();
+                                        context.fill();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    context.beginPath();
+                    context.arc(firework.BaseX + spark.X, firework.BaseY + spark.Y, 3, 0, 2 * Math.PI, false);
+                    context.fillStyle = "rgb(" + spark.Color + ")";
+                    context.fill();
+                });
+            }
+        });
+        $('#numFirework').text(fireworks.length);
+        setTimeout(updateCanvas, 50);
+    }
+</script>
