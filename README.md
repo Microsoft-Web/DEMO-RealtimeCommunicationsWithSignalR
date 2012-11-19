@@ -8,7 +8,7 @@ This demo shows how to use SignalR to build a highly interactive web application
 
 <a name="demo-preparation" />
 ## Demo Preparation ##
-- This demo uses pre-release of ASP.NET SignalR library. You'll need to create a local NuGet source and points it to **code\Assets\SingalRAlpha10-24**. You should set up the source before you attempt to open and compile the solution.
+- This demo uses pre-release of ASP.NET SignalR library. You'll need to create a local NuGet source and points it to **code\Assets\SingalRAlpha**. You should set up the source before you attempt to open and compile the solution.
 - The order of adding NuGet package references is important for this project. The correct order should be: jQuery 1.8.2, Windows Azure Service Bus 1.8.0, and then Microsoft ASP.NET SignalR Service Bus Library (alpha).
 
 <a name="enabling-signalr" />
