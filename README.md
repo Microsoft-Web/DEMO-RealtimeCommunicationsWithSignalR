@@ -79,7 +79,7 @@ var enableUI = false;
 1.  Add a reference to **Microsoft ASP.NET SignalR Service Bus Libraries**.
 2. Add **Global.asax.cs** from **code\Assets** folder, replace the existing file.
 
-    > **Note:** The new code constains standard code to initialize Service Bus backplane.
+    > **Note:** The new code contains standard code to initialize Service Bus backplane.
 3. Open **Web.config** and enter your Service Bus connection string as value of **Microsoft.ServiceBus.ConnectionString**.
 
 <a name="appendix" />
