@@ -8,12 +8,13 @@ This demo shows how to use SignalR to build a highly interactive web application
 
 <a name="demo-preparation" />
 ## Demo Preparation ##
-- This demo uses pre-release of ASP.NET SignalR library. You'll need to create a local NuGet source and points it to **code\Assets\SingalRAlpha10-24**. You should set up the source before you attempt to open and compile the solution.
+- This demo uses pre-release of ASP.NET SignalR library. You'll need to create a local NuGet source and points it to **code\Assets\SingalRAlpha**. You should set up the source before you attempt to open and compile the solution.
 - The order of adding NuGet package references is important for this project. The correct order should be: jQuery 1.8.2, Windows Azure Service Bus 1.8.0, and then Microsoft ASP.NET SignalR Service Bus Library (alpha).
 
 <a name="enabling-signalr" />
 ## Enabling SignalR ##
 1. Open **Firework.Web**. 
+1. Launch the app by pressying **F5**. Play with the app, explaining this works in a single-user mode at the moment.
 1. Add a reference to **jQuery 1.8.2** NuGet package.
 1. Add a reference to **Microsoft ASP.NET SignalR** Nuget package.
 2. Add **FireworkHub.cs** from **code\Assets** to the project.
@@ -33,7 +34,7 @@ fireworks.push(firework);
 with
 
     ````JavaScript
-hub.server.add(fireworkType.value, firework.BaseX, firework.BaseY, fireworkColor.value);
+hub.server.add(fireworkType.value, firework.BaseX, firework.BaseY, fireworkColor.value, fireworkTail.value);
 ````
     > **Note:** Instead of adding the firework to local array, we ask server to broadcast the add operation.
 
@@ -49,9 +50,9 @@ hub = $.signalR.fireworkHub;
 $.signalR.hub.stateChanged(connectionStateChanged);
 hub.on("addFirework",function (firework) {
     if (firework.Type == 1)
-        fireworks.push(new SimpleFirework(firework.X, firework.Y, firework.Color));
+        fireworks.push(new SimpleFirework(firework.X, firework.Y, firework.Color, firework.TailType));
     else
-        fireworks.push(new ComplexFirework(firework.X, firework.Y, firework.Color));
+        fireworks.push(new ComplexFirework(firework.X, firework.Y, firework.Color, firework.TailType));
 });
 $.signalR.hub.start().done(function()
 {
@@ -78,7 +79,7 @@ var enableUI = false;
 1.  Add a reference to **Microsoft ASP.NET SignalR Service Bus Libraries**.
 2. Add **Global.asax.cs** from **code\Assets** folder, replace the existing file.
 
-    > **Note:** The new code constains standard code to initialize Service Bus backplane.
+    > **Note:** The new code contains standard code to initialize Service Bus backplane.
 3. Open **Web.config** and enter your Service Bus connection string as value of **Microsoft.ServiceBus.ConnectionString**.
 
 <a name="appendix" />
