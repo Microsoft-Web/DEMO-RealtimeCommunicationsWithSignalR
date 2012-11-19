@@ -14,6 +14,7 @@ This demo shows how to use SignalR to build a highly interactive web application
 <a name="enabling-signalr" />
 ## Enabling SignalR ##
 1. Open **Firework.Web**. 
+1. Launch the app by pressying **F5**. Play with the app, explaining this works in a single-user mode at the moment.
 1. Add a reference to **jQuery 1.8.2** NuGet package.
 1. Add a reference to **Microsoft ASP.NET SignalR** Nuget package.
 2. Add **FireworkHub.cs** from **code\Assets** to the project.
@@ -33,7 +34,7 @@ fireworks.push(firework);
 with
 
     ````JavaScript
-hub.server.add(fireworkType.value, firework.BaseX, firework.BaseY, fireworkColor.value);
+hub.server.add(fireworkType.value, firework.BaseX, firework.BaseY, fireworkColor.value, fireworkTail.value);
 ````
     > **Note:** Instead of adding the firework to local array, we ask server to broadcast the add operation.
 
@@ -49,9 +50,9 @@ hub = $.signalR.fireworkHub;
 $.signalR.hub.stateChanged(connectionStateChanged);
 hub.on("addFirework",function (firework) {
     if (firework.Type == 1)
-        fireworks.push(new SimpleFirework(firework.X, firework.Y, firework.Color));
+        fireworks.push(new SimpleFirework(firework.X, firework.Y, firework.Color, firework.TailType));
     else
-        fireworks.push(new ComplexFirework(firework.X, firework.Y, firework.Color));
+        fireworks.push(new ComplexFirework(firework.X, firework.Y, firework.Color, firework.TailType));
 });
 $.signalR.hub.start().done(function()
 {
