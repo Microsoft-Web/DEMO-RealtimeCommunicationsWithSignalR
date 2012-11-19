@@ -1,0 +1,46 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Chat</h2>
+
+<div id="connectionStatus">Waiting</div>
+
+<div>
+    <label>Username</label>
+    <input type="text" id="username" value="someuser" />
+</div>
+<div>
+    <label>Message</label>
+    <input type="text" id="message" value="Hello World!" />
+</div>
+<div>
+    <button id="send">Send</button>
+</div>
+
+<ul id="messages"></ul>
+
+@section scripts{
+
+    <script src="~/Scripts/jquery.signalR-1.0.0-alpha1.js"></script>
+
+    <script type="text/javascript">
+        $(function () {
+            var cn = $.hubConnection();
+            var hub = cn.createHubProxy('chat');
+
+            hub.on('onReceiveMessage', function (msg) {
+                $('#messages').prepend('<li><b>' + msg.username + '</b>: ' + msg.message + '</li>');
+            });
+
+            $('#send').click(function () {
+                hub.invoke('SendMessage', { username: $('#username').val(), message: $('#message').val() });
+            });
+
+            cn.start().done(function () {
+                $('#connectionStatus').text('Connected');
+            });
+        });
+    </script>
+}
