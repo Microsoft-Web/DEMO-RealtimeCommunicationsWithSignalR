@@ -1,0 +1,43 @@
+Chat Demo Script
+----------------
+
+1. Open the Chat-Begin solution
+2. Install-Package Microsoft.AspNet.SignalR -pre
+3. Add a new SignalR Hub class to the project named ChatHub.cs and add the following code to it:
+
+[HubName("chat")]
+public class ChatHub : Hub
+{
+    public void SendMessage(dynamic message)
+    {
+        Clients.All.receiveMessage(message);
+    }
+}
+
+4. Replace the <!-- insert script references --> comment with this code to reference jQuery and SignalR (or drag and drop the scripts from the scripts folder into the page):
+
+<script src="Scripts/jquery-1.6.4.js"></script>
+<script src="Scripts/jquery.signalR-1.0.0-alpha2.js"></script>
+
+5. Replace the <!-- insert chat script --> comment with this custom JavaScript code:
+
+<script type="text/javascript">
+    $(function () {
+        var cn = $.hubConnection();
+        var hub = cn.createHubProxy('chat');
+
+        hub.on('receiveMessage', function (msg) {
+            $('#messages').prepend('<li><b>' + msg.username + '</b>: ' + msg.message + '</li>');
+        });
+
+        cn.start(function () {
+            $('#send').removeAttr('disabled');
+        });
+
+        $('#send').click(function () {
+            hub.invoke('SendMessage', { username: $('#username').val(), message: $('#message').val() });
+        });
+    });
+</script>
+
+6. Run the sample and open multiple browsers to see how the chat works

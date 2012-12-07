@@ -1,0 +1,8 @@
+﻿body {
+    font-family: 'Segoe UI';
+}
+
+label {
+    width: 150px;
+    display: inline-block;
+}
