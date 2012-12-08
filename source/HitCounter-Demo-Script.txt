@@ -1,0 +1,56 @@
+SignalR Hit Counter/Active User Counter Demo Script
+---------------------------------------------------
+
+1. Open the HitCounter-Begin solution
+2. Install-Package Microsoft.AspNet.SignalR -pre
+3. Add a new SignalR Hub class to the project named HitCounter.cs and add the following code to that class:
+
+static int _hitCount;
+
+public void RecordHit()
+{
+    _hitCount += 1;
+    Clients.All.onHitRecorded(_hitCount);
+}
+
+4. Open the Default.htm page in the editor
+
+5. Replace the <!-- add script references here --> comment with the following script references (or drag them into the file from the Scripts folder):
+
+<script src="Scripts/jquery-1.6.4.js"></script>
+<script src="Scripts/jquery.signalR-1.0.0-alpha2.js"></script>
+
+6. Replace the <!-- add custom script to run the hit counter here --> comment with the following custom JavaScript code:
+
+<script type="text/javascript">
+    $(function () {
+        var cn = $.hubConnection();
+        var hub = cn.createHubProxy('hitCounter');
+
+        hub.on('onHitRecorded', function (i) {
+            $('#hitCount').text(i);
+        });
+
+        cn.start(function () {
+            hub.invoke('RecordHit');
+        });
+    });
+</script>
+
+7. Run the project. Open multiple browsers to show the hit counter escalating with each hit.
+8. Close all browser instances
+9. Open the HitCounter.cs Hub class in the editor again. Add the following override to the class:
+
+public override System.Threading.Tasks.Task OnDisconnected()
+{
+    _hitCount -= 1;
+    Clients.All.onHitRecorded(_hitCount);
+
+    return base.OnDisconnected();
+}
+
+10. Set up the next demo by saying something like "does he mean to tell me this thing will know when the browser closes down?" and follow it up by saying "yes, that's exactly what it's going to do."
+
+11. Re-run the application. Open up multiple browsers to show the hit counter escalating.
+
+12. Individually (and slowly) close individual browser instances to show the hit counter descending.

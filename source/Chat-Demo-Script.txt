@@ -14,12 +14,14 @@ public class ChatHub : Hub
     }
 }
 
-4. Replace the <!-- insert script references --> comment with this code to reference jQuery and SignalR (or drag and drop the scripts from the scripts folder into the page):
+4. Open the Default.htm page in the editor.
+
+5. Replace the <!-- insert script references --> comment with this code to reference jQuery and SignalR (or drag and drop the scripts from the scripts folder into the page):
 
 <script src="Scripts/jquery-1.6.4.js"></script>
 <script src="Scripts/jquery.signalR-1.0.0-alpha2.js"></script>
 
-5. Replace the <!-- insert chat script --> comment with this custom JavaScript code:
+6. Replace the <!-- insert chat script --> comment with this custom JavaScript code:
 
 <script type="text/javascript">
     $(function () {
@@ -40,4 +42,4 @@ public class ChatHub : Hub
     });
 </script>
 
-6. Run the sample and open multiple browsers to see how the chat works
+7. Run the sample and open multiple browsers to see how the chat works
